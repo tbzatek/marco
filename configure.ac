@@ -177,7 +177,7 @@ AC_CHECK_HEADERS(execinfo.h, [AC_CHECK_FUNCS(backtrace)])
 
 AM_GLIB_GNU_GETTEXT
 
-PKG_CHECK_MODULES(ALL, glib-2.0 >= 2.32.0)
+PKG_CHECK_MODULES(ALL, glib-2.0 >= 2.36.0 xpresent)
 PKG_CHECK_MODULES(MARCO_MESSAGE, gtk+-$GTK_API_VERSION >= $GTK_MIN_VERSION)
 PKG_CHECK_MODULES(MARCO_WINDOW_DEMO, gtk+-$GTK_API_VERSION >= $GTK_MIN_VERSION)
 
@@ -438,7 +438,19 @@ if test "x$found_xsync" = "xyes"; then
    AC_DEFINE(HAVE_XSYNC, , [Have the Xsync extension library])
 fi
 
-MARCO_LIBS="$MARCO_LIBS $XSYNC_LIBS $RANDR_LIBS $SHAPE_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lm"
+XPRESENT_LIBS=
+found_xpresent=no
+AC_CHECK_LIB(Xpresent, XPresentPixmap,
+               [AC_CHECK_HEADER(X11/extensions/Xpresent.h,
+                                XPRESENT_LIBS=-lXpresent found_xpresent=yes,,
+        [#include <X11/Xlib.h>])],
+               , $ALL_X_LIBS)
+
+if test "x$found_xpresent" = "xyes"; then
+   AC_DEFINE(HAVE_PRESENT, , [Have the Xpresent extension library])
+fi
+
+MARCO_LIBS="$MARCO_LIBS $XSYNC_LIBS $RANDR_LIBS $SHAPE_LIBS $XPRESENT_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS -lm"
 MARCO_MESSAGE_LIBS="$MARCO_MESSAGE_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"
 MARCO_WINDOW_DEMO_LIBS="$MARCO_WINDOW_DEMO_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"
 MARCO_PROPS_LIBS="$MARCO_PROPS_LIBS $X_LIBS $X_PRE_LIBS -lX11 $X_EXTRA_LIBS"
@@ -546,6 +558,7 @@ marco-$VERSION (using gtk+-${GTK_API_VERSION}):
 	Shape extension:          ${found_shape}
 	Resize-and-rotate:        ${found_randr}
 	Xsync:                    ${found_xsync}
+	Xpresent:                 ${found_xpresent}
 	Render:                   ${have_xrender}
 	Xcursor:                  ${have_xcursor}
 "
